@@ -1,0 +1,181 @@
+```python
+# pages/_Analytics.py
+
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+
+from database.transactions import (
+    get_all_transactions
+)
+
+st.set_page_config(
+    page_title="Analytics",
+    page_icon="📊",
+    layout="wide"
+)
+
+st.title("📊 Library Resource Utilization Analytics")
+
+# --------------------------------------
+# Load Transaction Data
+# --------------------------------------
+
+records = get_all_transactions()
+
+if len(records) == 0:
+    st.warning("No transaction data available.")
+    st.stop()
+
+df = pd.DataFrame(records)
+
+# --------------------------------------
+# Summary Metrics
+# --------------------------------------
+
+issued = len(
+    df[df["status"] == "Issued"]
+)
+
+returned = len(
+    df[df["status"] == "Returned"]
+)
+
+total = len(df)
+
+col1, col2, col3 = st.columns(3)
+
+col1.metric(
+    "Total Transactions",
+    total
+)
+
+col2.metric(
+    "Books Issued",
+    issued
+)
+
+col3.metric(
+    "Books Returned",
+    returned
+)
+
+st.divider()
+
+# --------------------------------------
+# Most Borrowed Books
+# --------------------------------------
+
+st.subheader("📚 Most Borrowed Books")
+
+book_usage = (
+    df["book_title"]
+    .value_counts()
+    .reset_index()
+)
+
+book_usage.columns = [
+    "Book Title",
+    "Borrow Count"
+]
+
+fig_bar = px.bar(
+    book_usage,
+    x="Book Title",
+    y="Borrow Count",
+    text="Borrow Count",
+    title="Most Borrowed Books"
+)
+
+st.plotly_chart(
+    fig_bar,
+    use_container_width=True
+)
+
+st.dataframe(
+    book_usage,
+    use_container_width=True
+)
+
+st.divider()
+
+# --------------------------------------
+# Issue vs Return Pie Chart
+# --------------------------------------
+
+st.subheader("📈 Issue vs Return Status")
+
+status_data = (
+    df["status"]
+    .value_counts()
+    .reset_index()
+)
+
+status_data.columns = [
+    "Status",
+    "Count"
+]
+
+fig_pie = px.pie(
+    status_data,
+    names="Status",
+    values="Count",
+    title="Issued vs Returned Books"
+)
+
+st.plotly_chart(
+    fig_pie,
+    use_container_width=True
+)
+
+st.divider()
+
+# --------------------------------------
+# Department-wise Usage (Optional)
+# --------------------------------------
+
+if "student_name" in df.columns:
+
+    st.subheader("👨‍🎓 Library Usage")
+
+    student_data = (
+        df["student_name"]
+        .value_counts()
+        .reset_index()
+    )
+
+    student_data.columns = [
+        "Student",
+        "Books Borrowed"
+    ]
+
+    fig_student = px.bar(
+        student_data,
+        x="Student",
+        y="Books Borrowed",
+        text="Books Borrowed",
+        title="Student-wise Book Borrowing"
+    )
+
+    st.plotly_chart(
+        fig_student,
+        use_container_width=True
+    )
+
+st.divider()
+
+# --------------------------------------
+# Complete Analytics Table
+# --------------------------------------
+
+st.subheader("📋 Complete Transaction Report")
+
+st.dataframe(
+    df,
+    use_container_width=True
+)
+
+st.success(
+    "Analytics Loaded Successfully!"
+)
+```
