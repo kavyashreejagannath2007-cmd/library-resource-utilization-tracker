@@ -1,0 +1,58 @@
+```gitignore
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+# Environment Variables
+.env
+
+# Streamlit
+.streamlit/secrets.toml
+
+# IDE Files
+.vscode/
+.idea/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Python Build Files
+build/
+dist/
+*.egg-info/
+
+# Pytest
+.pytest_cache/
+
+# Coverage Reports
+.coverage
+htmlcov/
+
+# MongoDB Local Data (if stored inside project)
+data/db/
+
+# Temporary Files
+*.tmp
+*.bak
+
+# Generated Assets (Optional)
+assets/screenshots/*.png
+
+# Project Documents (Optional - remove if you want to upload them)
+docs/*.pdf
+docs/*.pptx
+```
