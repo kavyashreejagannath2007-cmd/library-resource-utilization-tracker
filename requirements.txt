@@ -2,4 +2,3 @@ streamlit
 pymongo
 pandas
 plotly
-numpy
