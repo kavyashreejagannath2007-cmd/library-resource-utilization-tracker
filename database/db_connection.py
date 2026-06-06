@@ -1,15 +1,13 @@
-```python
-# database/db_connection.py
-
 from pymongo import MongoClient
+import streamlit as st
 
-# MongoDB Connection URL
-MONGO_URI = "mongodb://localhost:27017/"
+# MongoDB URI
+MONGO_URI = st.secrets["MONGO_URI"]
 
-# Create Client
+# Create MongoDB client
 client = MongoClient(MONGO_URI)
 
-# Create / Connect Database
+# Database
 db = client["library_tracker"]
 
 # Collections
@@ -19,29 +17,16 @@ transactions_collection = db["transactions"]
 
 
 def get_database():
-    """
-    Returns the MongoDB database object.
-    """
     return db
 
 
 def get_books_collection():
-    """
-    Returns books collection.
-    """
     return books_collection
 
 
 def get_users_collection():
-    """
-    Returns users collection.
-    """
     return users_collection
 
 
 def get_transactions_collection():
-    """
-    Returns transactions collection.
-    """
     return transactions_collection
-```
