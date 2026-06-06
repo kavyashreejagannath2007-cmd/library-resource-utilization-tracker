@@ -17,7 +17,7 @@ st.set_page_config(
 # MongoDB Connection
 # ==============================
 # NOTE: Replace with MongoDB Atlas when deploying
-client = MongoClient("mongodb+srv://admin:admin123@cluster0.m1eq2gp.mongodb.net/library_tracker?retryWrites=true&w=majority")
+client = MongoClient("mongodb+srv://admin:admin123@cluster0.m1eq2gp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 db = client["library_tracker"]
 
 books = db["books"]
