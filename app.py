@@ -5,10 +5,10 @@ import plotly.express as px
 from datetime import date
 
 # ======================================
-#  MongoDB Connection
+# MongoDB Connection
 # ======================================
 
-client = MongoClient("mongodb://localhost:27017/")
+client = MongoClient("mongodb://localhost:27017/")  # change to Atlas if deploying
 db = client["library_tracker"]
 
 books = db["books"]
@@ -18,6 +18,7 @@ transactions = db["transactions"]
 # ======================================
 # Streamlit Configuration
 # ======================================
+
 st.set_page_config(
     page_title="Library Resource Utilization Tracker",
     page_icon="📚",
@@ -28,20 +29,13 @@ st.title("📚 Smart Library Resource Management and Utilization Tracker")
 
 menu = st.sidebar.radio(
     "Menu",
-    [
-        "Dashboard",
-        "Add Book",
-        "View Books",
-        "Add User",
-        "Issue Book",
-        "Return Book",
-        "Analytics"
-    ]
+    ["Dashboard", "Add Book", "View Books", "Add User", "Issue Book", "Return Book", "Analytics"]
 )
 
 # ======================================
 # Dashboard
 # ======================================
+
 if menu == "Dashboard":
 
     total_books = books.count_documents({})
@@ -57,15 +51,9 @@ if menu == "Dashboard":
     col4.metric("Transactions", total_transactions)
 
     st.markdown("---")
-
     st.subheader("Recent Transactions")
 
-    data = list(
-        transactions.find(
-            {},
-            {"_id": 0}
-        ).sort("_id", -1).limit(10)
-    )
+    data = list(transactions.find({}, {"_id": 0}).limit(10))
 
     if data:
         st.dataframe(pd.DataFrame(data), use_container_width=True)
@@ -75,6 +63,7 @@ if menu == "Dashboard":
 # ======================================
 # Add Book
 # ======================================
+
 elif menu == "Add Book":
 
     st.subheader("➕ Add New Book")
@@ -83,11 +72,7 @@ elif menu == "Add Book":
     title = st.text_input("Book Title")
     author = st.text_input("Author")
     category = st.text_input("Category")
-    quantity = st.number_input(
-        "Quantity",
-        min_value=1,
-        step=1
-    )
+    quantity = st.number_input("Quantity", min_value=1, step=1)
 
     if st.button("Save Book"):
 
@@ -104,28 +89,22 @@ elif menu == "Add Book":
 # ======================================
 # View Books
 # ======================================
+
 elif menu == "View Books":
 
     st.subheader("📖 Available Books")
 
-    book_data = list(
-        books.find(
-            {},
-            {"_id": 0}
-        )
-    )
+    book_data = list(books.find({}, {"_id": 0}))
 
     if book_data:
-        st.dataframe(
-            pd.DataFrame(book_data),
-            use_container_width=True
-        )
+        st.dataframe(pd.DataFrame(book_data), use_container_width=True)
     else:
         st.warning("No books available.")
 
 # ======================================
 # Add User
 # ======================================
+
 elif menu == "Add User":
 
     st.subheader("👨‍🎓 Register User")
@@ -149,6 +128,7 @@ elif menu == "Add User":
 # ======================================
 # Issue Book
 # ======================================
+
 elif menu == "Issue Book":
 
     st.subheader("📕 Issue Book")
@@ -161,35 +141,30 @@ elif menu == "Issue Book":
 
         book = books.find_one({"book_id": book_id})
 
-        if book:
+        if book and book["quantity"] > 0:
 
-            if book["quantity"] > 0:
+            transactions.insert_one({
+                "student_id": student_id,
+                "student_name": student_name,
+                "book_id": book_id,
+                "book_title": book["title"],
+                "issue_date": str(date.today()),
+                "status": "Issued"
+            })
 
-                transactions.insert_one({
-                    "student_id": student_id,
-                    "student_name": student_name,
-                    "book_id": book_id,
-                    "book_title": book["title"],
-                    "issue_date": str(date.today()),
-                    "status": "Issued"
-                })
+            books.update_one({"book_id": book_id}, {"$inc": {"quantity": -1}})
 
-                books.update_one(
-                    {"book_id": book_id},
-                    {"$inc": {"quantity": -1}}
-                )
+            st.success("Book Issued Successfully!")
 
-                st.success("Book Issued Successfully!")
-
-            else:
-                st.error("Book Not Available!")
-
+        elif book:
+            st.error("Book Not Available!")
         else:
             st.error("Invalid Book ID!")
 
 # ======================================
 # Return Book
 # ======================================
+
 elif menu == "Return Book":
 
     st.subheader("📗 Return Book")
@@ -198,29 +173,16 @@ elif menu == "Return Book":
 
     if st.button("Return Book"):
 
-        record = transactions.find_one({
-            "book_id": book_id,
-            "status": "Issued"
-        })
+        record = transactions.find_one({"book_id": book_id, "status": "Issued"})
 
         if record:
 
             transactions.update_one(
-                {
-                    "_id": record["_id"]
-                },
-                {
-                    "$set": {
-                        "status": "Returned",
-                        "return_date": str(date.today())
-                    }
-                }
+                {"_id": record["_id"]},
+                {"$set": {"status": "Returned", "return_date": str(date.today())}}
             )
 
-            books.update_one(
-                {"book_id": book_id},
-                {"$inc": {"quantity": 1}}
-            )
+            books.update_one({"book_id": book_id}, {"$inc": {"quantity": 1}})
 
             st.success("Book Returned Successfully!")
 
@@ -230,76 +192,32 @@ elif menu == "Return Book":
 # ======================================
 # Analytics
 # ======================================
+
 elif menu == "Analytics":
 
     st.subheader("📊 Library Resource Utilization")
 
-    records = list(
-        transactions.find(
-            {},
-            {"_id": 0}
-        )
-    )
+    records = list(transactions.find({}, {"_id": 0}))
 
     if records:
 
         df = pd.DataFrame(records)
 
-        usage = (
-            df["book_title"]
-            .value_counts()
-            .reset_index()
-        )
-
-        usage.columns = [
-            "Book Title",
-            "Borrow Count"
-        ]
+        usage = df["book_title"].value_counts().reset_index()
+        usage.columns = ["Book Title", "Borrow Count"]
 
         st.write("### Most Borrowed Books")
 
-        fig = px.bar(
-            usage,
-            x="Book Title",
-            y="Borrow Count",
-            text="Borrow Count",
-            title="Book Utilization Analysis"
-        )
+        fig = px.bar(usage, x="Book Title", y="Borrow Count", text="Borrow Count")
+        st.plotly_chart(fig, use_container_width=True)
 
-        st.plotly_chart(
-            fig,
-            use_container_width=True
-        )
+        st.dataframe(usage, use_container_width=True)
 
-        st.dataframe(
-            usage,
-            use_container_width=True
-        )
+        status = df["status"].value_counts().reset_index()
+        status.columns = ["Status", "Count"]
 
-        st.write("### Transaction Status")
-
-        status = (
-            df["status"]
-            .value_counts()
-            .reset_index()
-        )
-
-        status.columns = [
-            "Status",
-            "Count"
-        ]
-
-        pie = px.pie(
-            status,
-            names="Status",
-            values="Count",
-            title="Issued vs Returned Books"
-        )
-
-        st.plotly_chart(
-            pie,
-            use_container_width=True
-        )
+        pie = px.pie(status, names="Status", values="Count")
+        st.plotly_chart(pie, use_container_width=True)
 
     else:
         st.info("No transaction data available.")
