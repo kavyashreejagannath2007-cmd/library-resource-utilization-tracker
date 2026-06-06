@@ -5,8 +5,9 @@ import plotly.express as px
 from datetime import date
 
 # ======================================
-# MongoDB Connection
+#  MongoDB Connection
 # ======================================
+
 client = MongoClient("mongodb://localhost:27017/")
 db = client["library_tracker"]
 
